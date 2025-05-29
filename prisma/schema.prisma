@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoSorteo {
+  ACTIVO
+  PROXIMO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  CANCELADO
+}
+
+enum EstadoTicket {
+  ACTIVO
+  GANADOR
+  NO_GANADOR
+}
+
+model Sorteo {
+  id               String         @id @default(cuid())
+  titulo           String
+  descripcion      String
+  imagenUrl        String         // Será la ruta local: /uploads/sorteos/imagen.jpg
+  precio           Decimal        @db.Decimal(10, 2)
+  fechaSorteo      DateTime
+  ticketsDisponibles Int
+  ticketsVendidos  Int            @default(0)
+  ticketsTotales   Int
+  estado           EstadoSorteo   @default(PROXIMO)
+  premio           String
+  valorPremio      Decimal?       @db.Decimal(10, 2)
+  destacado        Boolean        @default(false)
+  proximamente     Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  
+  participantes    Participante[]
+  tickets          Ticket[]
+  
+  @@index([estado])
+  @@index([fechaSorteo])
+}
+
+model Participante {
+  id              String      @id @default(cuid())
+  dni             String      @db.VarChar(8)
+  nombres         String
+  apellidos       String
+  telefono        String      @db.VarChar(9)
+  email           String
+  departamento    String
+  cantidad        Int
+  montoTotal      Decimal     @db.Decimal(10, 2)
+  estadoPago      EstadoPago  @default(PENDIENTE)
+  fechaRegistro   DateTime    @default(now())
+  
+  sorteoId        String
+  sorteo          Sorteo      @relation(fields: [sorteoId], references: [id], onDelete: Cascade)
+  
+  tickets         Ticket[]
+  
+  @@index([sorteoId])
+  @@index([dni])
+  @@index([email])
+}
+
+model Ticket {
+  id              String        @id @default(cuid())
+  codigo          String        @unique
+  numeroTicket    Int
+  estado          EstadoTicket  @default(ACTIVO)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  participanteId  String
+  participante    Participante  @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  
+  sorteoId        String
+  sorteo          Sorteo        @relation(fields: [sorteoId], references: [id], onDelete: Cascade)
+  
+  @@index([codigo])
+  @@index([participanteId])
+  @@index([sorteoId])
+}
