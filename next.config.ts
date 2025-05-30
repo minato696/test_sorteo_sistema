@@ -1,8 +1,20 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // No necesitamos configuración especial para imágenes locales
-  // Next.js sirve automáticamente archivos desde la carpeta public
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+      }
+    ],
+  },
 };
 
 export default nextConfig;
